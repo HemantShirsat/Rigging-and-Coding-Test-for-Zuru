@@ -1,0 +1,60 @@
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
+from PyQt5 import QtWidgets
+import maya.OpenMaya as om
+import maya.api.OpenMaya as om2
+import maya.cmds as cmds
+
+class NodeInfoDockableWidget(QWidget):
+    def __init__(self, parent=None):
+        super(NodeInfoDockableWidget, self).__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        # Create a button
+        self.button = QPushButton('Print Selected Node Name', self)
+        self.button.clicked.connect(self.printSelectedNodeName)
+        
+        # Set up layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.button)
+        self.setLayout(layout)
+
+    def printSelectedNodeName(self):
+        # Get the list of selected objects
+        selected_objects = cmds.ls(selection=True)
+        
+        if not selected_objects:
+            print("No nodes selected.")
+            return
+
+        for obj in selected_objects:
+            # Use OpenMaya API to get MObject
+            dag_path = om2.MDagPath.getAPathTo(om2.MGlobal.getSelectionListByName(obj).getDagPath(0))
+            m_object = dag_path.node()
+
+            # Print the name of the selected node
+            print(f"Selected Node Name: {m_object.apiTypeStr}")
+
+def createDockableWidget():
+    # Check if widget already exists
+    if cmds.workspaceControl('nodeInfoDockableWidget', exists=True):
+        return
+    
+    # Create a new dockable widget
+    dock_control = cmds.workspaceControl('nodeInfoDockableWidget',
+                                         label='Node Info Dockable Widget',
+                                         width=300,
+                                         height=100,
+                                         area='right',
+                                         initialWidth=300,
+                                         initialHeight=100)
+    
+    # Create the widget
+    widget = NodeInfoDockableWidget()
+    
+    # Set widget in the dock control
+    cmds.workspaceControl(dock_control, edit=True, setDockable=True)
+    cmds.workspaceControl(dock_control, edit=True, uiScript=widget.show())
+
+if __name__ == "__main__":
+    createDockableWidget()

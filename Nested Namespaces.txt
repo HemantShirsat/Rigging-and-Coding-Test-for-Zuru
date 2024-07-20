@@ -1,0 +1,55 @@
+import maya.OpenMaya as om
+import maya.cmds as cmds
+
+def get_all_namespaces():
+    """Get all namespaces in the scene."""
+    namespaces = set()
+    
+    # Get the list of namespaces from the maya commands
+    namespaces = set(cmds.namespaceInfo(lon=True) or [])
+    
+    return namespaces
+
+def remove_namespace(ns_name):
+    """Remove a namespace and its children."""
+    if ns_name not in ["global", ""]:
+        try:
+            cmds.namespace(rm=ns_name, mnr=True)  # Remove namespace with its members
+        except Exception as e:
+            print(f"Error removing namespace: {e}")
+
+def remove_all_namespaces():
+    """Remove all namespaces except 'global'."""
+    namespaces = get_all_namespaces()
+    for ns in namespaces:
+        if ns not in ["global", ""]:
+            remove_namespace(ns)
+
+def create_nested_namespaces():
+    """Create some nested namespaces."""
+    namespaces = [
+        'parent_ns',
+        'parent_ns:child_ns',
+        'parent_ns:child_ns:sub_child_ns'
+    ]
+    
+    for ns in namespaces:
+        cmds.namespace(add=ns)
+
+def main():
+    print("Creating nested namespaces...")
+    create_nested_namespaces()
+    
+    print("Listing all namespaces...")
+    namespaces = get_all_namespaces()
+    print("Namespaces in the scene:", namespaces)
+    
+    print("Removing all namespaces...")
+    remove_all_namespaces()
+    
+    print("Listing all namespaces after removal...")
+    namespaces = get_all_namespaces()
+    print("Namespaces after removal:", namespaces)
+
+if __name__ == "__main__":
+    main()
